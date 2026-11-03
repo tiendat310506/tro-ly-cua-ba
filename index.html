@@ -284,8 +284,8 @@ function loadVoices(){voices=('speechSynthesis' in window)?speechSynthesis.getVo
 if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 function voiceScore(v){const n=v.name.toLowerCase();let sc=0;
   if(/^vi[-_]vn/i.test(v.lang))sc+=1;
-  if(/natural|online|neural|network/.test(n))sc+=5;   // giọng chất lượng cao (Edge, Google mạng)
-  if(/google/.test(n))sc+=3;
+  if(/google|vi-vn-x-/.test(n))sc+=10;  // ưu tiên giọng Google (Chrome máy tính & Android)
+  if(/natural|online|neural|network/.test(n))sc+=3;
   if(/hoaimy|hoài my|female|nữ|linh|an\b|gft|vic|vif/.test(n))sc+=3; // giọng nữ
   if(/namminh|male|nam minh|vid|vie\b/.test(n))sc-=6;   // tránh giọng nam
   if(v.localService===false)sc+=1;return sc}
