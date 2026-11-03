@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trợ Lý Của Bà</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffffff;--soft:#f4f4f2;--ink:#111111;--muted:#6f6f6f;--accent:#ffe1d2;--line:#e6e6e6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:24px;line-height:1.45;font-weight:400;overflow-x:hidden}
+main{position:relative;max-width:640px;margin:0 auto;padding:16px 20px 40px;min-height:100%}
+h2{font-size:32px;margin:12px 0 16px;font-weight:300;letter-spacing:.5px}
+.screen{display:none}.screen.on{display:block}
+button{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:80px;margin:12px 0;padding:14px 18px;border:0;border-radius:40px;font-size:25px;font-weight:600;color:#fff;background:var(--ink);cursor:pointer;font-family:inherit}
+button.lime{background:var(--accent);color:var(--ink)}
+button.ghost{background:#fff;color:var(--ink);border:1.5px solid #cfcfcf;font-weight:400}
+button.small{min-height:62px;font-size:22px}
+button:active{transform:scale(.97)}
+.emo{font-size:30px}
+.muted{color:var(--muted);font-size:20px}
+.row{display:flex;gap:10px}.row>*{flex:1}
+
+/* Trang chủ */
+#home{text-align:center}
+.pill{display:block;text-align:left;font-size:16px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);margin-top:6px}
+.title{font-size:44px;white-space:nowrap;font-weight:300;letter-spacing:2px;margin:18px 0 0;line-height:1.1}
+.robotWrap{width:250px;height:300px;margin:8px auto 0}
+.robotWrap svg{width:100%;height:100%}
+.float{animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-6px)}}
+.hello{font-size:22px;color:#333;margin:4px 0 18px;font-weight:300}
+
+/* Chat */
+#chat{display:none;flex-direction:column;height:100dvh;margin:-16px -20px -40px;padding:0}
+#chat.on{display:flex}
+.chatTop{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.92);backdrop-filter:blur(8px)}
+
+.chatTop .t{flex:1;min-width:0;font-weight:600;font-size:22px}.chatTop .t small{display:block;color:var(--muted);font-weight:300;font-size:16px}
+.chatTop button{width:auto;min-height:52px;margin:0;padding:0 18px;font-size:18px}
+#msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:#fff}
+.b{max-width:86%;padding:14px 18px;border-radius:26px;font-size:24px;word-wrap:break-word}
+.b.bot{align-self:flex-start;background:var(--soft);border-bottom-left-radius:8px}
+.b.me{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:8px}
+.b.bot .hear{display:inline-block;margin-top:6px;color:var(--muted);font-size:18px;cursor:pointer}
+.b pre{white-space:pre-wrap;font-family:inherit;font-size:19px;margin:0}
+.b.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px;background:var(--ink)}
+.b.photos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:18px}
+.b.photos.one{grid-template-columns:1fr;max-width:60%}
+.quick{align-self:stretch;display:flex;flex-direction:column}
+.quick button{margin:6px 0}
+.bar{padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff;display:flex;gap:10px;align-items:center}
+.bar input{flex:1;min-width:0;font-size:22px;padding:16px 20px;border-radius:40px;border:1.5px solid #d6d6d6;background:#fff;color:var(--ink);font-family:inherit}
+.bar button{width:auto;min-height:64px;min-width:64px;margin:0;padding:0 14px;border-radius:40px}
+#micBtn{min-width:92px}
+#micBtn.listening{animation:pulse 1s infinite;background:#e5484d}
+@keyframes pulse{50%{box-shadow:0 0 0 12px rgba(229,72,77,.2)}}
+
+/* Thẻ */
+.card{background:#fff;border:1.5px solid var(--line);border-radius:28px;padding:18px;margin:12px 0}
+.rem b{font-size:40px;font-weight:300}
+input[type=time],input[type=text],select{font-size:26px;padding:12px 16px;border-radius:18px;border:1.5px solid #d6d6d6;background:#fff;color:var(--ink);width:100%;font-family:inherit}
+input[type=range]{width:100%;accent-color:var(--ink)}
+label{display:block;margin-top:12px}
+.toast{position:fixed;left:16px;right:16px;bottom:100px;background:var(--ink);color:#fff;padding:18px;border-radius:20px;font-size:22px;display:none;z-index:9}
+.alarm{position:fixed;inset:0;background:rgba(255,255,255,.98);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;z-index:10}
+.alarm h1{font-size:40px;font-weight:300}
+.char{width:100%;height:100%;overflow:visible}
+.char .eyesOpen,.char .mouth{display:none}
+.char .head{transform-origin:120px 200px}
+.char.talking .eyesHappy,.char.talking .smile{display:none}
+.char.talking .eyesOpen{display:block;transform-box:fill-box;transform-origin:center;animation:blink 3.2s infinite}
+.char.talking .mouth{display:block;transform-box:fill-box;transform-origin:50% 0;animation:talk .28s ease-in-out infinite alternate}
+.char.talking .head{animation:nod 1.4s ease-in-out infinite}
+@keyframes talk{0%{transform:scaleY(.25)}60%{transform:scaleY(1)}100%{transform:scaleY(.5)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@keyframes nod{50%{transform:rotate(-2deg) translateY(-2px)}}
+.char.img{position:relative}
+.char.img img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center top}
+.char.img .f2,.char.img .f3{opacity:0}
+.char.img.talking .f1{opacity:0}
+.char.img.talking .f2{opacity:1}
+.char.img.talking .f2{opacity:1}
+.char.img.talking .f3{animation:mouth .32s steps(1) infinite}
+.char.img.talking{animation:nod 1.4s ease-in-out infinite;transform-origin:50% 80%}
+@keyframes mouth{0%{opacity:1}50%{opacity:0}}
+.stage{display:flex;align-items:center;gap:14px}
+.stage .av{width:96px;height:120px;flex:none}
+
+/* ===== Bố cục 1 trang ===== */
+#page{display:flex;flex-direction:column;align-items:center;height:100dvh;min-height:0;padding:12px 20px calc(12px + env(safe-area-inset-bottom))}
+.topbar{align-self:stretch;display:flex}
+.setBtn{width:auto;min-height:56px;margin:0;padding:0 20px;font-size:20px;border-radius:18px}
+.charArea{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.bigChar{height:100%;max-height:520px;aspect-ratio:4/5;max-width:100%}
+.caption{align-self:stretch;text-align:center;font-size:24px;line-height:1.35;min-height:2.7em;padding:6px 4px;color:#222}
+.actions{align-self:stretch;display:flex;flex-direction:column}
+.actions button{margin:5px 0;min-height:64px;font-size:22px}
+.chatIcon{width:132px;height:132px;min-height:0;border-radius:50%;flex-direction:column;gap:2px;margin:10px auto;font-size:52px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.chatIcon small{font-size:15px;font-weight:600}
+.chatIcon.listening{background:#e5484d;animation:pulse 1s infinite}
+.historyBar{background:#1f8a3a;color:#fff;min-height:58px;margin:4px 0 0;border-radius:16px;font-size:20px;letter-spacing:1px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:8;align-items:flex-end}
+.sheet.on{display:flex}
+.sheetIn{background:#fff;width:100%;max-width:640px;margin:0 auto;max-height:92dvh;overflow-y:auto;border-radius:28px 28px 0 0;padding:16px 20px calc(20px + env(safe-area-inset-bottom))}
+.chatSheet{display:flex;flex-direction:column;height:92dvh;overflow:hidden;padding:16px 0 0}
+.chatSheet .sheetHead{padding:0 20px}
+.sheetHead{display:flex;align-items:center;justify-content:space-between;font-size:24px}
+.sheetHead .close{width:auto;min-height:52px;margin:0;padding:0 18px;font-size:18px}
+
+/* ===== Tinh chỉnh v2 ===== */
+#page{padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.setBtn{width:44px;height:44px;min-height:0;padding:0;border-radius:50%;background:#f4f4f2;color:#333}
+.charArea{padding:6px 0 0}
+.frame{position:relative;width:100%;height:100%;max-width:520px;border-radius:32px;overflow:hidden;background:#fff}
+.bigChar{width:100%;height:100%;max-height:none;aspect-ratio:auto}
+.char.img img{object-fit:cover;object-position:center 20%}
+.caption{position:absolute;left:12px;right:12px;bottom:12px;min-height:0;padding:12px 16px;font-size:20px;line-height:1.35;color:#111;background:rgba(255,255,255,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.actions{margin-top:8px}
+.actions button{min-height:56px;font-size:20px;margin:4px 0}
+.chatIcon{flex:none;padding:0;width:76px;height:76px;margin:12px auto 2px;font-size:0;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+#micBtn.chatIcon{min-width:0;border-radius:50%}
+.micLbl{font-size:15px;color:#666;text-align:center}
+.historyBar{width:auto;min-height:40px;margin:4px auto 0;padding:4px 12px;background:none;color:#1f8a3a;font-size:16px;font-weight:600;letter-spacing:0;text-decoration:underline;text-underline-offset:4px}
+
+/* ===== v3: 1 giao diện chính, nút trả lời nằm trong khung ===== */
+.overlay{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px}
+.overlay .caption{position:static}
+.overlay .actions{margin:0}
+.overlay .quick{flex-direction:row;flex-wrap:wrap;gap:8px}
+.overlay .quick button{flex:1 1 40%;min-height:52px;margin:0;font-size:18px;border-radius:18px;background:rgba(17,17,17,.88);color:#fff;border:0;font-weight:600}
+.overlay .quick button.ghost{background:rgba(255,255,255,.9);color:#111}
+.overlay .quick button.lime{background:#1f8a3a;color:#fff}
+#micIco img{display:block;width:40px;height:40px}
+.chatIcon.listening{background:#111;box-shadow:0 0 0 0 rgba(31,138,58,.5);animation:ring 1.2s infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(31,138,58,.55)}100%{box-shadow:0 0 0 18px rgba(31,138,58,0)}}
+
+/* Icon nhảy lên xuống khi đang nghe bà nói */
+.chatIcon.listening #micIco img{animation:hop .45s cubic-bezier(.3,0,.4,1) infinite alternate}
+@keyframes hop{0%{transform:translateY(3px) scale(1.06,.92)}100%{transform:translateY(-7px) scale(.96,1.05)}}
+</style>
+</head>
+<body>
+
+<!-- Robot dùng chung -->
+
+<main id="page">
+  <div class="topbar"><button class="setBtn" onclick="openSheet('settings')" aria-label="Cài đặt"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
+  <div class="charArea"><div class="frame"><div class="bigChar" data-char></div>
+    <div class="overlay"><div id="caption" class="caption" onclick="lastSaid&&speak(lastSaid)">Bà nội ơi, bà bấm nút tròn để nói chuyện với con nha.</div>
+    <div id="actions" class="actions"></div></div></div></div>
+  <button id="micBtn" class="chatIcon" onclick="chatPress()" aria-label="Nói chuyện"><span id="micIco"></span></button><div id="micLbl" class="micLbl">Nói chuyện</div>
+  <button class="historyBar" onclick="openSheet('history')">Xem lại tin nhắn</button>
+  <input id="camIn" type="file" accept="image/*" capture="environment" hidden>
+  <input id="galIn" type="file" accept="image/*" multiple hidden>
+</main>
+
+<!-- Xem lại tin nhắn -->
+<div class="sheet" id="history"><div class="sheetIn chatSheet">
+  <div class="sheetHead"><b>Tin nhắn</b><button class="ghost close" onclick="closeSheets()">✕ Đóng</button></div>
+  <div id="msgs"></div>
+  <div class="bar">
+    <input id="txt" type="text" placeholder="Bà gõ ở đây…" enterkeyhint="send">
+    <button id="sendBtn" onclick="sendTyped()" aria-label="Gửi">➤</button>
+  </div>
+</div></div>
+
+<!-- Cài đặt (gồm nhắc nhở) -->
+<div class="sheet" id="settings"><div class="sheetIn">
+  <div class="sheetHead"><b>⚙️ Cài đặt</b><button class="ghost close" onclick="closeSheets()">✕ Đóng</button></div>
+  <h2>⏰ Nhắc nhở hằng ngày</h2>
+  <div id="remList"></div>
+  <div class="card">
+    <div class="muted">Thêm lời nhắc mới</div>
+    <input id="remTime" type="time" value="08:00" style="margin-top:8px">
+    <input id="remText" type="text" placeholder="Nhắc việc gì? (vd: Đăng bài)" style="margin-top:10px">
+    <button class="lime small" onclick="addReminder()">➕ Thêm lời nhắc</button>
+  </div>
+  <p class="muted">Bấm "Cài báo thức" để điện thoại reo cả khi app đang tắt.</p>
+  <h2>🔊 Giọng nói</h2>
+  <label class="muted">Tên người nhận (hiện trên nút Gửi)</label>
+  <input id="setName" type="text">
+  <label class="muted">Tốc độ đọc</label>
+  <input id="setRate" type="range" min="0.6" max="1.2" step="0.1">
+  <label class="muted">Giọng đọc</label>
+  <select id="setVoice"></select>
+  <button class="ghost small" onclick="speak('Chào bà, con đọc như vầy bà nghe có rõ không?')">🔊 Thử giọng</button>
+  <button class="small" onclick="saveSettings()">Lưu</button>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<div class="alarm" id="alarm"><div style="width:200px;height:250px" data-char></div><h1 id="alarmText"></h1><button class="lime" onclick="closeAlarm()">Bà biết rồi</button></div>
+
+<script>
+/* ===== MẪU CÂU HỎI — sửa ở đây theo mẫu của anh Đạt =====
+   q: câu con đọc cho bà nghe; key: tên ngắn hiện trong bản tóm tắt */
+const QUESTIONS = [
+  {key:"Tên", q:"Bà nội ơi, sản phẩm mới hôm nay là gì dạ bà?"},
+  {key:"Mã", q:"Dạ, món này có mã số gì không bà nội? Không có thì bà nói không có là được nha."},
+  {key:"Giá", q:"Bà nội tính bán giá bao nhiêu vậy bà?"},
+  {key:"Màu", q:"Món này có mấy màu vậy bà nội? Bà kể con nghe từng màu nha."},
+  {key:"Size", q:"Dạ còn size thì sao bà nội? Người khoảng bao nhiêu ký mặc thì vừa dạ?"},
+];
+
+
+/* ===== Nhân vật trợ lý (vẽ bằng SVG, biết nói và chớp mắt) ===== */
+/* Ảnh nhân vật 3D: đặt 3 ảnh vào thư mục avatar/ rồi đổi USE_IMG = true
+   1.png = cười nhắm mắt, 2.png = mở mắt ngậm miệng, 3.png = mở mắt há miệng */
+const USE_IMG=true;
+let gid=0;
+function charSVG(){if(USE_IMG)return `<div class="char img"><img class="f1" src="avatar/1.jpg" alt=""><img class="f2" src="avatar/2.jpg" alt=""><img class="f3" src="avatar/3.jpg" alt=""></div>`;const k='c'+(gid++);return `
+<svg class="char" viewBox="0 0 240 300" aria-hidden="true">
+ <defs>
+  <radialGradient id="${k}s" cx=".4" cy=".32" r=".8"><stop offset="0" stop-color="#ffe9dc"/><stop offset=".55" stop-color="#f8cdb2"/><stop offset="1" stop-color="#e7a586"/></radialGradient>
+  <radialGradient id="${k}n" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="#ffd0c0"/><stop offset="1" stop-color="#f2907c"/></radialGradient>
+  <radialGradient id="${k}k"><stop offset="0" stop-color="#ff8a7a" stop-opacity=".5"/><stop offset="1" stop-color="#ff8a7a" stop-opacity="0"/></radialGradient>
+  <linearGradient id="${k}h" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#c79a6b"/><stop offset=".5" stop-color="#9a6a3f"/><stop offset="1" stop-color="#6b4424"/></linearGradient>
+  <linearGradient id="${k}e" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8906f"/><stop offset=".45" stop-color="#f4c3a5"/></linearGradient>
+  <radialGradient id="${k}t" cx=".5" cy=".05" r="1.1"><stop offset="0" stop-color="#fff"/><stop offset=".65" stop-color="#f3f3f3"/><stop offset="1" stop-color="#d9d9d9"/></radialGradient>
+ </defs>
+ <g class="body">
+  <path d="M14 300 q2-58 62-70 h88 q60 12 62 70z" fill="url(#${k}t)"/>
+  <path d="M84 232 q36 22 72 0" stroke="#e2e2e2" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M96 178 h48 v52 q-24 14-48 0z" fill="url(#${k}e)"/>
+ </g>
+ <g class="head">
+  <ellipse cx="62" cy="128" rx="13" ry="19" fill="#f0a283"/><ellipse cx="178" cy="128" rx="13" ry="19" fill="#f0a283"/>
+  <path d="M68 92 q0-50 52-50 q52 0 52 50 v66 q0 54-52 54 q-52 0-52-54z" fill="url(#${k}s)"/>
+  <circle cx="86" cy="140" r="17" fill="url(#${k}k)"/><circle cx="154" cy="140" r="17" fill="url(#${k}k)"/>
+  <path d="M60 100 q-12-30 6-52 q14-28 50-30 q22-10 46 0 q34 10 34 40 q10 18-4 46 q-4-30-18-40 q-6 12-24 8 q-20-12-44-4 q-18 6-30 0 q-10 14-10 40 q-6-4-6-8z" fill="url(#${k}h)"/>
+  <path d="M84 40 q26-20 60-8 M98 30 q30-6 54 10 M74 60 q14-20 40-22" stroke="#d9b087" stroke-width="3" fill="none" stroke-linecap="round" opacity=".6"/>
+  <path d="M82 98 q12-9 26-3" stroke="#6b4424" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M132 95 q14-6 26 3" stroke="#6b4424" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <g class="eyesHappy" stroke="#3a2418" stroke-width="4" fill="none" stroke-linecap="round"><path d="M84 118 q10-10 20 0"/><path d="M136 118 q10-10 20 0"/></g>
+  <g class="eyesOpen"><ellipse cx="94" cy="116" rx="7" ry="9" fill="#2b1a12"/><ellipse cx="146" cy="116" rx="7" ry="9" fill="#2b1a12"/><circle cx="96" cy="112" r="2.5" fill="#fff"/><circle cx="148" cy="112" r="2.5" fill="#fff"/></g>
+  <ellipse cx="120" cy="138" rx="19" ry="15" fill="url(#${k}n)"/><ellipse cx="114" cy="133" rx="6" ry="3.5" fill="#fff" opacity=".45"/>
+  <path class="smile" d="M96 164 q24 18 48 0" stroke="#8a3b2a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <g class="mouth"><path d="M100 162 q20 4 40 0 q-2 22-20 22 q-18 0-20-22z" fill="#7a2c22"/><ellipse cx="120" cy="177" rx="10" ry="5" fill="#e8786a"/></g>
+ </g>
+</svg>`}
+document.querySelectorAll('[data-char]').forEach(el=>el.innerHTML=charSVG());
+setTimeout(()=>setMic('idle'));
+function setTalking(on){document.querySelectorAll('.char').forEach(s=>s.classList.toggle('talking',on))}
+
+/* ===== Lưu trữ ===== */
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let settings=store.get('settings',{name:'Đạt',rate:0.9,voice:''});
+let photos=[],answers=[],qi=-1,stage='idle',pending='';
+const $=id=>document.getElementById(id);
+const nm=()=>settings.name||'Đạt';
+
+function openSheet(id){closeSheets();$(id).classList.add('on');if(id==='settings'){renderReminders();fillSettings()}if(id==='history')scrollDown()}
+function closeSheets(){document.querySelectorAll('.sheet').forEach(x=>x.classList.remove('on'))}
+function show(id){if(id==='reminders'||id==='settings')openSheet('settings');else closeSheets()}
+function goHome(){stopAll();closeSheets();stage='idle';clearQuick();caption('Bà bấm nút tròn để nói chuyện với con nha.')}
+let lastSaid='';
+const ICON={
+ chat:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg>',
+ mic:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+ wave:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>'};
+function caption(t){$('caption').textContent=t}
+function setMic(state){const b=$('micBtn');b.classList.toggle('listening',state==='listen');
+  $('micIco').innerHTML='<img src="icon-chat.png" alt="" width="40" height="40">';
+  $('micLbl').textContent=state==='listen'?'Con đang nghe…':(stage==='answer'||stage==='confirm')?'Bấm để nói':'Nói chuyện'}
+function chatPress(){
+  if(rec){rec.stop();return}
+  if(stage==='answer'||stage==='confirm'){stage='answer';listen();return}
+  if(stage==='photo'){askPhoto();return}
+  menu();
+}
+function menu(){stage='menu';bot('Bà nội ơi, hôm nay bà cần con phụ gì nè?');
+  quick([['📷 Đăng bài bán hàng',startPost],['⏰ Cài nhắc nhở',()=>{openSheet('settings');stage='idle'},'lime']])}
+function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>el.style.display='none',3500)}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ===== Giọng đọc (ưu tiên giọng nữ tiếng Việt) ===== */
+let voices=[];
+function loadVoices(){voices=('speechSynthesis' in window)?speechSynthesis.getVoices().filter(v=>/^vi/i.test(v.lang)):[]}
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function pickVoice(){if(settings.voice){const v=voices.find(v=>v.name===settings.voice);if(v)return v}
+  return voices.find(v=>/female|nữ|vi-vn-x-gft|vi-vn-x-vif|vi-vn-x-vic|hoaimy/i.test(v.name))||voices[0]}
+function speak(text,onend){
+  if(!('speechSynthesis' in window)){onend&&onend();return}
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='vi-VN';u.rate=settings.rate||0.9;u.pitch=1.1;
+  const v=pickVoice();if(v)u.voice=v;let done=false;const fin=()=>{if(!done){done=true;onend&&onend()}};
+  u.onstart=()=>setTalking(true);u.onend=()=>{setTalking(false);fin()};u.onerror=()=>{setTalking(false);fin()};speechSynthesis.speak(u);
+}
+
+/* ===== Tin nhắn ===== */
+function scrollDown(){const m=$('msgs');requestAnimationFrame(()=>m.scrollTop=m.scrollHeight)}
+function bot(text,{say=true,after}={}){
+  const d=document.createElement('div');d.className='b bot';d.innerHTML=esc(text).replace(/\n/g,'<br>')+'<br><span class="hear">🔊 Nghe lại</span>';
+  d.querySelector('.hear').onclick=()=>speak(text);$('msgs').appendChild(d);scrollDown();caption(text);lastSaid=text;setMic(rec?'listen':'idle');
+  if(say)speak(text,after);else after&&after();return d;
+}
+function me(text){const d=document.createElement('div');d.className='b me';d.textContent=text;$('msgs').appendChild(d);scrollDown()}
+function quick(items){clearQuick();const q=document.createElement('div');q.className='quick';q.id='quick';
+  items.forEach(([label,fn,cls])=>{const b=document.createElement('button');b.className=(cls||'')+' small';b.innerHTML=label;b.onclick=()=>{clearQuick();fn()};q.appendChild(b)});
+  $('actions').appendChild(q)}
+function clearQuick(){$('actions').innerHTML=''}
+
+/* ===== Nhận giọng nói ===== */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+function listen(){
+  if(!SR){toast('Máy chưa hỗ trợ nói, bà gõ chữ giúp con nha');$('txt').focus();return}
+  if(rec){rec.stop();return}
+  speechSynthesis.cancel();rec=new SR();rec.lang='vi-VN';rec.interimResults=true;rec.continuous=false;let heard='';
+  rec.onresult=e=>{heard='';for(const r of e.results)heard+=r[0].transcript;caption('Bà: '+heard)};
+  rec.onerror=e=>{if(e.error==='not-allowed')toast('Bà cho phép dùng micro giúp con nha')};
+  rec.onend=()=>{rec=null;setMic('idle');
+    if(heard.trim())handleInput(heard.trim())};
+  setMic('listen');rec.start();
+}
+function sendTyped(){try{rec&&rec.abort()}catch(e){};const t=$('txt').value.trim();if(!t)return;$('txt').value='';handleInput(t)}
+$('txt').addEventListener('keydown',e=>{if(e.key==='Enter')sendTyped()});
+function stopAll(){try{rec&&rec.stop()}catch(e){};if('speechSynthesis' in window)speechSynthesis.cancel();setTalking(false)}
+
+/* ===== Luồng trò chuyện ===== */
+function startPost(){
+  photos=[];answers=QUESTIONS.map(()=>'');qi=-1;stage='photo';$('msgs').innerHTML='';closeSheets();
+  bot('Dạ bà nội gửi con ảnh sản phẩm mới nha. Bà chụp hoặc chọn ảnh có sẵn đều được.');askPhoto();
+}
+function askPhoto(){quick([['<span class="emo">📸</span> Chụp ảnh',()=>{$('camIn').click()}],['<span class="emo">🖼️</span> Chọn ảnh có sẵn',()=>{$('galIn').click()},'ghost']])}
+function addFiles(files){
+  files=[...files];if(!files.length){askPhoto();return}
+  photos.push(...files);const d=document.createElement('div');d.className='b photos'+(files.length===1?' one':'');
+  files.forEach(f=>{const i=document.createElement('img');i.src=URL.createObjectURL(f);d.appendChild(i)});$('msgs').appendChild(d);scrollDown();
+  bot('Con thấy ảnh rồi, đẹp quá! Bà muốn thêm ảnh nữa không?');
+  quick([['✅ Đủ rồi, hỏi tiếp đi',()=>nextQuestion(),'lime'],['📸 Chụp thêm',()=>$('camIn').click(),'ghost'],['🖼️ Chọn thêm ảnh',()=>$('galIn').click(),'ghost']]);
+}
+$('camIn').onchange=e=>{addFiles(e.target.files);e.target.value=''};
+$('galIn').onchange=e=>{addFiles(e.target.files);e.target.value=''};
+
+function nextQuestion(){
+  qi++;if(qi>=QUESTIONS.length){finish();return}
+  stage='answer';bot(QUESTIONS[qi].q,{after:()=>{if(stage==='answer'&&SR)listen()}});
+  quick([['⏭️ Bỏ qua câu này',()=>{me('(Bỏ qua)');answers[qi]='';nextQuestion()},'ghost']]);
+}
+function handleInput(text){
+  clearQuick();me(text);closeSheets();
+  if(stage==='answer'){pending=text;stage='confirm';
+    bot('Bà nói là: "'+text+'". Đúng chưa bà?');
+    quick([['✅ Đúng rồi',()=>{answers[qi]=pending;nextQuestion()},'lime'],['🎤 Nói lại',()=>{stage='answer';listen()},'ghost']]);
+  }else if(stage==='confirm'){
+    if(/^(đúng|ừ|ờ|rồi|phải|ok|được)/i.test(text)){answers[qi]=pending;nextQuestion()}
+    else{pending=text;bot('Vậy là: "'+text+'". Đúng chưa bà?');
+      quick([['✅ Đúng rồi',()=>{answers[qi]=pending;nextQuestion()},'lime'],['🎤 Nói lại',()=>{stage='answer';listen()},'ghost']])}
+  }else if(stage==='photo'){bot('Bà gửi ảnh trước giúp con nha.');askPhoto()}
+  else bot('Dạ con nghe rồi bà.',{say:true});
+}
+
+function buildText(){
+  const a=k=>{const v=(answers[QUESTIONS.findIndex(q=>q.key===k)]||'').trim();return /^(không|ko|hông)( có)?\.?$/i.test(v)?'':v};
+  const tpl=`Sản phẩm mới:\n• Tên: ${a('Tên')}\n• Mã: ${a('Mã')}\n• Giá: ${a('Giá')}\n• Màu: ${a('Màu')}\n• Size: ${a('Size')}`;
+  const caption=[`✨ ${a('Tên')||'Hàng mới về'} ✨`,a('Màu')&&('🎨 Màu: '+a('Màu')),a('Size')&&('📏 Size: '+a('Size')),a('Giá')&&('💰 Giá: '+a('Giá')),'Inbox hoặc bình luận để đặt hàng nha cả nhà ❤️'].filter(Boolean).join('\n');
+  const prompt=`Ảnh quảng cáo bán hàng đẹp, sáng, chuyên nghiệp cho sản phẩm "${a('Tên')}" (dựa trên ảnh gốc đính kèm), màu ${a('Màu')||'như ảnh gốc'}. Có chữ tiếng Việt nổi bật: "${a('Tên')}" và giá "${a('Giá')}". Phong cách sang trọng, phù hợp đăng Facebook.`;
+  return `${tpl}\n\n✍️ GỢI Ý BÀI ĐĂNG:\n${caption}\n\n🎨 CÂU LỆNH TẠO ẢNH AI:\n${prompt}`;
+}
+function finish(){
+  stage='done';
+  bot('Xong rồi bà ơi! Con ghi lại hết rồi nè. Bà bấm nút để gửi cho '+nm()+' nha.');
+  const d=document.createElement('div');d.className='b bot';d.innerHTML='<pre></pre>';d.querySelector('pre').textContent=buildText();$('msgs').appendChild(d);
+  quick([[`<span class="emo">📤</span> Gửi cho ${esc(nm())}`,sendAll,'lime'],['✏️ Làm lại từ đầu',startPost,'ghost'],['🏠 Về trang chủ',goHome,'ghost']]);
+}
+async function sendAll(){
+  const text=buildText();try{await navigator.clipboard.writeText(text)}catch(e){}
+  const data={title:'Hàng mới của bà',text};
+  if(photos.length&&navigator.canShare&&navigator.canShare({files:photos}))data.files=photos;
+  let ok=false;
+  if(navigator.share){try{await navigator.share(data);ok=true}catch(e){}}
+  if(ok)bot('Gửi xong rồi bà ơi. Cảm ơn bà nha!');
+  else toast('Đã chép chữ. Bà mở Zalo, dán và gửi ảnh cho '+nm()+' nha');
+  quick([[`<span class="emo">📤</span> Gửi lại`,sendAll,'ghost'],['🏠 Về trang chủ',goHome,'ghost']]);
+}
+
+/* ===== Nhắc nhở ===== */
+let reminders=store.get('reminders',[{time:'08:00',text:'Đăng bài bán hàng'}]);
+function renderReminders(){
+  $('remList').innerHTML='';if(!reminders.length)$('remList').innerHTML='<p class="muted">Chưa có lời nhắc nào.</p>';
+  reminders.sort((a,b)=>a.time.localeCompare(b.time));
+  reminders.forEach((r,i)=>{const c=document.createElement('div');c.className='card rem';
+    c.innerHTML=`<b>${r.time}</b><div>${esc(r.text)}</div><div class="row"><button class="lime small" data-a="alarm">🔔 Cài báo thức</button><button class="ghost small" data-a="del">🗑️ Xoá</button></div>`;
+    c.querySelector('[data-a=alarm]').onclick=()=>setPhoneAlarm(r);
+    c.querySelector('[data-a=del]').onclick=()=>{if(confirm('Xoá lời nhắc '+r.time+'?')){reminders.splice(i,1);store.set('reminders',reminders);renderReminders()}};
+    $('remList').appendChild(c)});
+}
+function addReminder(){const t=$('remTime').value,x=$('remText').value.trim()||'Đăng bài bán hàng';if(!t)return;
+  reminders.push({time:t,text:x});store.set('reminders',reminders);$('remText').value='';renderReminders();
+  speak('Con đã thêm lời nhắc lúc '+t.replace(':',' giờ ')+'. Bà bấm Cài báo thức để điện thoại reo nha.')}
+function setPhoneAlarm(r){const [h,m]=r.time.split(':').map(Number);
+  // Mở ứng dụng Đồng hồ của Android để cài báo thức
+  location.href=`intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${h};i.android.intent.extra.alarm.MINUTES=${m};S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent(r.text)};end`}
+let lastFired=store.get('lastFired',{});
+setInterval(()=>{const n=new Date(),t=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'),day=n.toDateString();
+  reminders.forEach(r=>{const k=r.time+r.text;if(r.time===t&&lastFired[k]!==day){lastFired[k]=day;store.set('lastFired',lastFired);
+    $('alarmText').textContent=r.text;$('alarm').style.display='flex';speak('Bà ơi, tới giờ '+r.text+' rồi nè.')}})},20000);
+function closeAlarm(){$('alarm').style.display='none';stopAll()}
+
+/* ===== Cài đặt ===== */
+function fillSettings(){$('setName').value=settings.name||'';$('setRate').value=settings.rate||0.9;loadVoices();
+  $('setVoice').innerHTML='<option value="">Tự chọn giọng nữ</option>'+voices.map(v=>`<option ${v.name===settings.voice?'selected':''}>${esc(v.name)}</option>`).join('')}
+['setRate','setVoice'].forEach(id=>$(id).onchange=()=>{settings.rate=+$('setRate').value;settings.voice=$('setVoice').value});
+function saveSettings(){settings={name:$('setName').value.trim()||'Đạt',rate:+$('setRate').value,voice:$('setVoice').value};store.set('settings',settings);toast('Đã lưu');closeSheets()}
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
