@@ -123,10 +123,10 @@ label{display:block;margin-top:12px}
 .caption{position:absolute;left:12px;right:12px;bottom:12px;min-height:0;padding:12px 16px;font-size:20px;line-height:1.35;color:#111;background:rgba(255,255,255,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
 .actions{margin-top:8px}
 .actions button{min-height:56px;font-size:20px;margin:4px 0}
-.chatIcon{flex:none;padding:0;width:76px;height:76px;margin:12px auto 2px;font-size:0;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.chatIcon{flex:none;padding:0;width:62px;height:62px;margin:10px auto 2px;font-size:0;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 #micBtn.chatIcon{min-width:0;border-radius:50%}
 .micLbl{font-size:15px;color:#666;text-align:center}
-.historyBar{width:auto;min-height:40px;margin:4px auto 0;padding:4px 12px;background:none;color:#1f8a3a;font-size:16px;font-weight:600;letter-spacing:0;text-decoration:underline;text-underline-offset:4px}
+.historyBar{width:auto;min-height:40px;margin:4px auto 0;padding:2px 10px;background:none;color:#1f8a3a;font-size:14px;font-weight:600;letter-spacing:0;text-decoration:underline;text-underline-offset:4px}
 
 /* ===== v3: 1 giao diện chính, nút trả lời nằm trong khung ===== */
 .overlay{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px}
@@ -136,7 +136,7 @@ label{display:block;margin-top:12px}
 .overlay .quick button{flex:1 1 40%;min-height:52px;margin:0;font-size:18px;border-radius:18px;background:rgba(17,17,17,.88);color:#fff;border:0;font-weight:600}
 .overlay .quick button.ghost{background:rgba(255,255,255,.9);color:#111}
 .overlay .quick button.lime{background:#1f8a3a;color:#fff}
-#micIco img{display:block;width:40px;height:40px}
+#micIco img{display:block;width:32px;height:32px}
 .chatIcon.listening{background:#111;box-shadow:0 0 0 0 rgba(31,138,58,.5);animation:ring 1.2s infinite}
 @keyframes ring{0%{box-shadow:0 0 0 0 rgba(31,138,58,.55)}100%{box-shadow:0 0 0 18px rgba(31,138,58,0)}}
 
@@ -249,7 +249,7 @@ function setTalking(on){document.querySelectorAll('.char').forEach(s=>s.classLis
 
 /* ===== Lưu trữ ===== */
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let settings=store.get('settings',{name:'Đạt',rate:0.9,voice:''});
+let settings=store.get('settings',{name:'Đạt',rate:0.95,voice:''});
 let photos=[],answers=[],qi=-1,stage='idle',pending='';
 const $=id=>document.getElementById(id);
 const nm=()=>settings.name||'Đạt';
@@ -265,7 +265,7 @@ const ICON={
  wave:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>'};
 function caption(t){$('caption').textContent=t}
 function setMic(state){const b=$('micBtn');b.classList.toggle('listening',state==='listen');
-  $('micIco').innerHTML='<img src="icon-chat.png" alt="" width="40" height="40">';
+  $('micIco').innerHTML='<img src="icon-chat.png" alt="" width="32" height="32">';
   $('micLbl').textContent=state==='listen'?'Con đang nghe…':(stage==='answer'||stage==='confirm')?'Bấm để nói':'Nói chuyện'}
 function chatPress(){
   if(rec){rec.stop();return}
@@ -282,13 +282,32 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 let voices=[];
 function loadVoices(){voices=('speechSynthesis' in window)?speechSynthesis.getVoices().filter(v=>/^vi/i.test(v.lang)):[]}
 if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function voiceScore(v){const n=v.name.toLowerCase();let sc=0;
+  if(/^vi[-_]vn/i.test(v.lang))sc+=1;
+  if(/natural|online|neural|network/.test(n))sc+=5;   // giọng chất lượng cao (Edge, Google mạng)
+  if(/google/.test(n))sc+=3;
+  if(/hoaimy|hoài my|female|nữ|linh|an\b|gft|vic|vif/.test(n))sc+=3; // giọng nữ
+  if(/namminh|male|nam minh|vid|vie\b/.test(n))sc-=6;   // tránh giọng nam
+  if(v.localService===false)sc+=1;return sc}
 function pickVoice(){if(settings.voice){const v=voices.find(v=>v.name===settings.voice);if(v)return v}
-  return voices.find(v=>/female|nữ|vi-vn-x-gft|vi-vn-x-vif|vi-vn-x-vic|hoaimy/i.test(v.name))||voices[0]}
+  return voices.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0]}
+function cleanSpeech(t){return String(t).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/["“”•]/g,'').replace(/\s+/g,' ').trim()}
+let speakId=0;
 function speak(text,onend){
   if(!('speechSynthesis' in window)){onend&&onend();return}
-  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='vi-VN';u.rate=settings.rate||0.9;u.pitch=1.1;
-  const v=pickVoice();if(v)u.voice=v;let done=false;const fin=()=>{if(!done){done=true;onend&&onend()}};
-  u.onstart=()=>setTalking(true);u.onend=()=>{setTalking(false);fin()};u.onerror=()=>{setTalking(false);fin()};speechSynthesis.speak(u);
+  const id=++speakId;speechSynthesis.cancel();
+  // Chia câu ngắn để giọng đọc ngắt nghỉ tự nhiên, không bị Chrome cắt giữa chừng
+  const parts=cleanSpeech(text).split(/(?<=[.?!…])\s+/).filter(x=>x.trim());
+  if(!parts.length){onend&&onend();return}
+  const v=pickVoice();let i=0;setTalking(true);
+  const done=()=>{if(id!==speakId)return;setTalking(false);setTimeout(()=>{if(id===speakId)onend&&onend()},350)};
+  const next=()=>{if(id!==speakId)return;if(i>=parts.length){done();return}
+    const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='vi-VN';u.rate=settings.rate||0.95;u.pitch=1.05;if(v)u.voice=v;
+    let fired=false;const go=()=>{if(!fired){fired=true;next()}};u.onend=go;u.onerror=go;
+    // phòng khi trình duyệt không báo kết thúc
+    setTimeout(go,Math.max(4000,parts[i-1].length*160/(u.rate||1)));
+    speechSynthesis.speak(u)};
+  setTimeout(next,60);
 }
 
 /* ===== Tin nhắn ===== */
@@ -305,18 +324,38 @@ function quick(items){clearQuick();const q=document.createElement('div');q.class
 function clearQuick(){$('actions').innerHTML=''}
 
 /* ===== Nhận giọng nói ===== */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,retry=0;
 function listen(){
-  if(!SR){toast('Máy chưa hỗ trợ nói, bà gõ chữ giúp con nha');$('txt').focus();return}
+  if(!SR){toast('Máy chưa hỗ trợ nói, bà gõ chữ giúp con nha');openSheet('history');$('txt').focus();return}
   if(rec){rec.stop();return}
-  speechSynthesis.cancel();rec=new SR();rec.lang='vi-VN';rec.interimResults=true;rec.continuous=false;let heard='';
-  rec.onresult=e=>{heard='';for(const r of e.results)heard+=r[0].transcript;caption('Bà: '+heard)};
-  rec.onerror=e=>{if(e.error==='not-allowed')toast('Bà cho phép dùng micro giúp con nha')};
-  rec.onend=()=>{rec=null;setMic('idle');
-    if(heard.trim())handleInput(heard.trim())};
-  setMic('listen');rec.start();
+  speakId++;speechSynthesis.cancel();setTalking(false);
+  const r=new SR();rec=r;r.lang='vi-VN';r.interimResults=true;r.continuous=true;r.maxAlternatives=3;
+  let finalTxt='',interim='',silence=null,gotSpeech=false,userStop=false,err='';const t0=Date.now();
+  const arm=ms=>{clearTimeout(silence);silence=setTimeout(()=>{try{r.stop()}catch(e){}},ms)};
+  arm(9000); // chờ bà bắt đầu nói tối đa 9 giây
+  r.onresult=e=>{interim='';gotSpeech=true;
+    for(let k=e.resultIndex;k<e.results.length;k++){const res=e.results[k];
+      if(res.isFinal)finalTxt+=(finalTxt?' ':'')+res[0].transcript.trim();else interim+=res[0].transcript}
+    caption('Bà: '+(finalTxt+' '+interim).trim());
+    arm(interim?2200:1500)}; // bà ngừng nói khoảng 1,5 giây thì con chốt câu
+  r.onerror=e=>{err=e.error;if(err==='not-allowed'||err==='service-not-allowed')toast('Bà cho phép dùng micro giúp con nha');
+    else if(err==='network')toast('Mạng yếu nên con nghe chưa được, bà thử lại nha');};
+  r.onend=()=>{clearTimeout(silence);if(rec===r)rec=null;setMic('idle');
+    const text=(finalTxt||interim).trim();
+    if(text){retry=0;handleInput(fixText(text));return}
+    if(r._abort||err==='not-allowed'||err==='service-not-allowed')return;
+    // Android đôi khi tự tắt micro sớm: mở lại ngay nếu bà chưa kịp nói
+    if(!gotSpeech&&Date.now()-t0<8000&&err!=='network'&&err!=='no-speech'){listen();return}
+    if((stage==='answer'||stage==='confirm')&&retry<2){retry++;
+      bot('Con chưa nghe rõ, bà nói lớn và chậm lại giúp con nha.',{after:()=>listen()});return}
+    retry=0;caption('Bà bấm nút tròn rồi nói nha.')};
+  setMic('listen');try{r.start()}catch(e){rec=null;setMic('idle')}
 }
-function sendTyped(){try{rec&&rec.abort()}catch(e){};const t=$('txt').value.trim();if(!t)return;$('txt').value='';handleInput(t)}
+// Sửa vài lỗi nhận giọng hay gặp
+function fixText(t){t=t.replace(/\s+/g,' ').trim();
+  const E='(?=[\\s,.;]|$)';t=t.replace(new RegExp('(\\d+)\\s*(ký|kí|kg|cân|ki lô)'+E,'gi'),'$1kg').replace(new RegExp('(\\d+)\\s*(nghìn|ngàn|k|ca)'+E,'gi'),'$1k');
+  return t.charAt(0).toUpperCase()+t.slice(1)}
+function sendTyped(){try{if(rec){rec._abort=true;rec.abort()}}catch(e){};const t=$('txt').value.trim();if(!t)return;$('txt').value='';handleInput(t)}
 $('txt').addEventListener('keydown',e=>{if(e.key==='Enter')sendTyped()});
 function stopAll(){try{rec&&rec.stop()}catch(e){};if('speechSynthesis' in window)speechSynthesis.cancel();setTalking(false)}
 
@@ -344,11 +383,12 @@ function nextQuestion(){
 function handleInput(text){
   clearQuick();me(text);closeSheets();
   if(stage==='answer'){pending=text;stage='confirm';
-    bot('Bà nói là: "'+text+'". Đúng chưa bà?');
+    bot('Bà nói là: '+text+'. Đúng chưa bà?',{after:()=>{if(stage==='confirm'&&SR)listen()}});
     quick([['✅ Đúng rồi',()=>{answers[qi]=pending;nextQuestion()},'lime'],['🎤 Nói lại',()=>{stage='answer';listen()},'ghost']]);
   }else if(stage==='confirm'){
-    if(/^(đúng|ừ|ờ|rồi|phải|ok|được)/i.test(text)){answers[qi]=pending;nextQuestion()}
-    else{pending=text;bot('Vậy là: "'+text+'". Đúng chưa bà?');
+    if(/^(dạ |vâng |ừ |à )?(đúng|ừ|ờ|rồi|phải|ok|được|vâng|dạ đúng|chuẩn)/i.test(text.toLowerCase())){answers[qi]=pending;nextQuestion()}
+    else if(/^(sai|không|chưa|nói lại)/i.test(text)){stage='answer';bot('Dạ, bà nói lại giúp con nha.',{after:()=>listen()})}
+    else{pending=text;bot('Vậy là: '+text+'. Đúng chưa bà?',{after:()=>{if(stage==='confirm'&&SR)listen()}});
       quick([['✅ Đúng rồi',()=>{answers[qi]=pending;nextQuestion()},'lime'],['🎤 Nói lại',()=>{stage='answer';listen()},'ghost']])}
   }else if(stage==='photo'){bot('Bà gửi ảnh trước giúp con nha.');askPhoto()}
   else bot('Dạ con nghe rồi bà.',{say:true});
