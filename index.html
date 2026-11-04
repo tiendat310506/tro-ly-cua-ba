@@ -300,21 +300,27 @@ function voiceScore(v){const n=v.name.toLowerCase();let sc=0;
   if(v.localService===false)sc+=1;return sc}
 function pickVoice(){if(settings.voice){const v=voices.find(v=>v.name===settings.voice);if(v)return v}
   return voices.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0]}
-function cleanSpeech(t){return String(t).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/["“”•]/g,'').replace(/\s+/g,' ').trim()}
+function cleanSpeech(t){const E='(?=[\\s,.;:!?]|$)';return String(t)
+  .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/["“”•()]/g,'')
+  .replace(/(\d\s*(?:kg|k|ký|kí)?)\s*[-–]\s*(\d)/gi,'$1 đến $2')
+  .replace(new RegExp('(\\d)\\s*kg'+E,'gi'),'$1 ký').replace(new RegExp('(\\d)\\s*k'+E,'gi'),'$1 nghìn')
+  .replace(/(\d)\s*%/g,'$1 phần trăm').replace(/:/g,',')
+  .replace(/\s+/g,' ').trim()}
 let speakId=0;
 function speak(text,onend){
   if(!('speechSynthesis' in window)){onend&&onend();return}
   const id=++speakId;speechSynthesis.cancel();
   // Chia câu ngắn để giọng đọc ngắt nghỉ tự nhiên, không bị Chrome cắt giữa chừng
-  const parts=cleanSpeech(text).split(/(?<=[.?!…])\s+/).filter(x=>x.trim());
+  // mỗi câu đều có dấu kết thúc để giọng đọc hạ giọng đúng và không nuốt chữ cuối
+  const parts=cleanSpeech(text).split(/(?<=[.?!…])\s+/).filter(x=>x.trim()).map(x=>/[.?!…]$/.test(x)?x:x+'.');
   if(!parts.length){onend&&onend();return}
   const v=pickVoice();let i=0;setTalking(true);
   const done=()=>{if(id!==speakId)return;setTalking(false);setTimeout(()=>{if(id===speakId)onend&&onend()},350)};
   const next=()=>{if(id!==speakId)return;if(i>=parts.length){done();return}
     const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='vi-VN';u.rate=settings.rate||0.95;u.pitch=1.05;if(v)u.voice=v;
-    let fired=false;const go=()=>{if(!fired){fired=true;next()}};u.onend=go;u.onerror=go;
+    let fired=false;const go=()=>{if(!fired){fired=true;setTimeout(next,150)}};u.onend=go;u.onerror=go;
     // phòng khi trình duyệt không báo kết thúc
-    setTimeout(go,Math.max(4000,parts[i-1].length*160/(u.rate||1)));
+    setTimeout(go,Math.max(5000,parts[i-1].length*220/(u.rate||1)));
     speechSynthesis.speak(u)};
   setTimeout(next,60);
 }
