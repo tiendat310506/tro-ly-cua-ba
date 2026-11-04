@@ -283,7 +283,7 @@ function chatPress(){
   menu();
 }
 function menu(){stage='menu';bot('Bà nội ơi, hôm nay bà cần con phụ gì nè?');
-  quick([['📷 Đăng bài bán hàng',startPost],['⏰ Cài nhắc nhở',()=>{openSheet('settings');stage='idle'},'lime']])}
+  quick([['📷 Đăng bài bán hàng',startPost]])}
 function toast(t){const el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>el.style.display='none',3500)}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
