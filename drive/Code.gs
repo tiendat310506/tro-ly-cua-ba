@@ -40,23 +40,29 @@ function guiTelegram(text, blobs) {
 function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
-    const root = DriveApp.getFolderById(FOLDER_ID);
-    const stamp = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd HH.mm');
-    const ten = String(d.name || 'Sản phẩm').replace(/[\\/:*?"<>|]/g, '').slice(0, 60);
-    const folder = root.createFolder(stamp + ' - ' + ten);
     const text = String(d.text || '');
-    folder.createFile('thong-tin.txt', text, MimeType.PLAIN_TEXT);
     const blobs = (d.photos || []).map(function (p, i) {
-      const blob = Utilities.newBlob(Utilities.base64Decode(p.data), p.type || 'image/jpeg', 'anh-' + (i + 1) + '.jpg');
-      folder.createFile(blob);
-      return blob;
+      return Utilities.newBlob(Utilities.base64Decode(p.data), p.type || 'image/jpeg', 'anh-' + (i + 1) + '.jpg');
     });
-    let tg = 'off';
-    try { guiTelegram(text, blobs); tg = 'ok'; } catch (err) { tg = String(err); }
-    return out({ ok: true, url: folder.getUrl(), telegram: tg });
+    // 1) Báo qua Telegram trước (không phụ thuộc Drive)
+    let tg = 'ok';
+    try { guiTelegram(text, blobs); } catch (err) { tg = String(err); console.log('Telegram lỗi: ' + tg); }
+    // 2) Lưu vào Drive
+    let drive = 'ok', url = '';
+    try {
+      const root = DriveApp.getFolderById(FOLDER_ID);
+      const stamp = Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd HH.mm');
+      const ten = String(d.name || 'Sản phẩm').replace(/[\\/:*?"<>|]/g, '').slice(0, 60);
+      const folder = root.createFolder(stamp + ' - ' + ten);
+      folder.createFile('thong-tin.txt', text, MimeType.PLAIN_TEXT);
+      blobs.forEach(function (b) { folder.createFile(b); });
+      url = folder.getUrl();
+    } catch (err) { drive = String(err); console.log('Drive lỗi: ' + drive); }
+    return out({ ok: tg === 'ok' || drive === 'ok', url: url, telegram: tg, drive: drive });
   } catch (err) {
     return out({ ok: false, error: String(err) });
   }
 }
+function thuGui() { Logger.log(doPost({ postData: { contents: JSON.stringify({ name: 'THU NGHIEM', text: 'Thử gửi từ code', photos: [] }) } }).getContent()); }
 function doGet() { return out({ ok: true, ping: 'tro-ly-cua-ba' }); }
 function out(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
