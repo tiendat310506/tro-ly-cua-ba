@@ -381,15 +381,15 @@ function stopAll(){try{rec&&rec.stop()}catch(e){};if('speechSynthesis' in window
 /* ===== Luồng trò chuyện ===== */
 function startPost(){
   photos=[];answers=QUESTIONS.map(()=>'');qi=-1;stage='photo';$('msgs').innerHTML='';closeSheets();
-  bot('Dạ bà nội gửi con ảnh sản phẩm mới nha. Bà chụp hoặc chọn ảnh có sẵn đều được.');askPhoto();
+  bot('Dạ bà nội gửi con ảnh sản phẩm mới nha. Bà bấm nút chọn ảnh có sẵn trong máy nha.');askPhoto();
 }
-function askPhoto(){quick([['<span class="emo">📸</span> Chụp ảnh',()=>{$('camIn').click()}],['<span class="emo">🖼️</span> Chọn ảnh có sẵn',()=>{$('galIn').click()},'ghost']])}
+function askPhoto(){quick([['<span class="emo">🖼️</span> Chọn ảnh có sẵn',()=>{$('galIn').click()}]])}
 function addFiles(files){
   files=[...files];if(!files.length){askPhoto();return}
   photos.push(...files);const d=document.createElement('div');d.className='b photos'+(files.length===1?' one':'');
   files.forEach(f=>{const i=document.createElement('img');i.src=URL.createObjectURL(f);d.appendChild(i)});$('msgs').appendChild(d);scrollDown();
   bot('Con thấy ảnh rồi, đẹp quá! Bà muốn thêm ảnh nữa không?');
-  quick([['✅ Đủ rồi, hỏi tiếp đi',()=>nextQuestion(),'lime'],['📸 Chụp thêm',()=>$('camIn').click(),'ghost'],['🖼️ Chọn thêm ảnh',()=>$('galIn').click(),'ghost']]);
+  quick([['✅ Đủ rồi, hỏi tiếp đi',()=>nextQuestion(),'lime'],['🖼️ Chọn thêm ảnh',()=>$('galIn').click(),'ghost']]);
 }
 $('camIn').onchange=e=>{addFiles(e.target.files);e.target.value=''};
 $('galIn').onchange=e=>{addFiles(e.target.files);e.target.value=''};
