@@ -220,6 +220,7 @@ const QUESTIONS = [
   {key:"Giá", q:"Bà nội tính bán giá bao nhiêu vậy bà?"},
   {key:"Màu", q:"Món này có mấy màu vậy bà nội? Bà kể con nghe từng màu nha."},
   {key:"Size", q:"Dạ còn size thì sao bà nội? Người khoảng bao nhiêu ký mặc thì vừa dạ?"},
+  {key:"Ghi chú", q:"Bà nội kể con nghe vải gì, có điểm gì đẹp không bà? Không có thì bà nói không có là được nha."},
 ];
 
 
@@ -421,10 +422,7 @@ function handleInput(text){
 
 function buildText(){
   const a=k=>{const v=(answers[QUESTIONS.findIndex(q=>q.key===k)]||'').trim();return /^(không|ko|hông)( có)?\.?$/i.test(v)?'':v};
-  const tpl=`Sản phẩm mới:\n• Tên: ${a('Tên')}\n• Mã: ${a('Mã')}\n• Giá: ${a('Giá')}\n• Màu: ${a('Màu')}\n• Size: ${a('Size')}`;
-  const caption=[`✨ ${a('Tên')||'Hàng mới về'} ✨`,a('Màu')&&('🎨 Màu: '+a('Màu')),a('Size')&&('📏 Size: '+a('Size')),a('Giá')&&('💰 Giá: '+a('Giá')),'Inbox hoặc bình luận để đặt hàng nha cả nhà ❤️'].filter(Boolean).join('\n');
-  const prompt=`Ảnh quảng cáo bán hàng đẹp, sáng, chuyên nghiệp cho sản phẩm "${a('Tên')}" (dựa trên ảnh gốc đính kèm), màu ${a('Màu')||'như ảnh gốc'}. Có chữ tiếng Việt nổi bật: "${a('Tên')}" và giá "${a('Giá')}". Phong cách sang trọng, phù hợp đăng Facebook.`;
-  return `${tpl}\n\n✍️ GỢI Ý BÀI ĐĂNG:\n${caption}\n\n🎨 CÂU LỆNH TẠO ẢNH AI:\n${prompt}`;
+  return `Sản phẩm mới:\n• Tên: ${a('Tên')}\n• Mã: ${a('Mã')}\n• Giá: ${a('Giá')}\n• Màu: ${a('Màu')}\n• Size: ${a('Size')}\n• Ghi chú (chất liệu, điểm nổi bật): ${a('Ghi chú')}\n\nEm làm giúp anh 4 ảnh người mẫu theo khung trang 7 và viết caption đăng Facebook.`;
 }
 function finish(){
   stage='done';
