@@ -430,14 +430,32 @@ function finish(){
   const d=document.createElement('div');d.className='b bot';d.innerHTML='<pre></pre>';d.querySelector('pre').textContent=buildText();$('msgs').appendChild(d);
   quick([[`<span class="emo">📤</span> Gửi cho ${esc(nm())}`,sendAll,'lime'],['✏️ Làm lại từ đầu',startPost,'ghost'],['🏠 Về trang chủ',goHome,'ghost']]);
 }
+// Link Google Apps Script của Đạt (lưu ảnh vào Drive). Để trống thì gửi kiểu cũ.
+const DRIVE_URL='';
+function shrink(f){return new Promise(res=>{const img=new Image(),u=URL.createObjectURL(f);
+  img.onload=()=>{const k=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement('canvas');
+    c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.85).split(',')[1])};
+  img.onerror=()=>{URL.revokeObjectURL(u);res(null)};img.src=u})}
+async function uploadDrive(text){
+  const ps=[];for(const f of photos){const d=await shrink(f);if(d)ps.push({data:d,type:'image/jpeg'})}
+  const name=(answers[QUESTIONS.findIndex(q=>q.key==='Tên')]||'').trim();
+  const r=await fetch(DRIVE_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({name,text,photos:ps})});
+  const j=await r.json();if(!j.ok)throw new Error(j.error||'upload');return j.url}
 async function sendAll(){
   const text=buildText();try{await navigator.clipboard.writeText(text)}catch(e){}
+  let up=false;
+  if(DRIVE_URL&&photos.length){
+    bot('Dạ bà chờ con xíu, con đang gửi ảnh lên cho '+nm()+' nha.');
+    try{await uploadDrive(text);up=true;bot('Ảnh lên rồi bà ơi. Giờ bà chọn Zalo rồi chọn '+nm()+' để gửi chữ nha.')}
+    catch(e){bot('Mạng hơi yếu nên ảnh chưa lên được. Bà gửi ảnh qua Zalo luôn nha.')}
+  }
   const data={title:'Hàng mới của bà',text};
-  if(photos.length&&navigator.canShare&&navigator.canShare({files:photos}))data.files=photos;
+  if(!up&&photos.length&&navigator.canShare&&navigator.canShare({files:photos}))data.files=photos;
   let ok=false;
   if(navigator.share){try{await navigator.share(data);ok=true}catch(e){}}
   if(ok)bot('Gửi xong rồi bà ơi. Cảm ơn bà nha!');
-  else toast('Đã chép chữ. Bà mở Zalo, dán và gửi ảnh cho '+nm()+' nha');
+  else toast('Đã chép chữ. Bà mở Zalo, dán và gửi cho '+nm()+' nha');
   quick([[`<span class="emo">📤</span> Gửi lại`,sendAll,'ghost'],['🏠 Về trang chủ',goHome,'ghost']]);
 }
 
