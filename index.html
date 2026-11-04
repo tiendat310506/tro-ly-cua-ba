@@ -21,6 +21,10 @@ button{display:flex;align-items:center;justify-content:center;gap:12px;width:100
 button.lime{background:var(--accent);color:var(--ink)}
 button.ghost{background:#fff;color:var(--ink);border:1.5px solid #cfcfcf;font-weight:400}
 button.small{min-height:62px;font-size:22px}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px}
+.presets button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin:0;min-height:64px;font-size:18px;padding:6px 8px;background:#fff;color:#111;border:2px solid #ddd;border-radius:16px;line-height:1.2}
+.presets button small{display:block;font-size:13px;color:#777;font-weight:400}
+.presets button.on{border-color:#1f8a3a;background:#eaf7ee}
 button:active{transform:scale(.97)}
 .emo{font-size:30px}
 .muted{color:var(--muted);font-size:20px}
@@ -200,8 +204,10 @@ label{display:block;margin-top:12px}
   <h2>🔊 Giọng nói</h2>
   <label class="muted">Tên người nhận (hiện trên nút Gửi)</label>
   <input id="setName" type="text">
+  <label class="muted">Kiểu giọng (bấm để nghe thử)</label>
+  <div id="presets" class="presets"></div>
   <label class="muted">Tốc độ đọc</label>
-  <input id="setRate" type="range" min="0.6" max="1.2" step="0.1">
+  <input id="setRate" type="range" min="0.6" max="1.3" step="0.05">
   <label class="muted">Giọng đọc</label>
   <select id="setVoice"></select>
   <button class="ghost small" onclick="speak('Chào bà, con đọc như vầy bà nghe có rõ không?')">🔊 Thử giọng</button>
@@ -265,7 +271,14 @@ function setTalking(on){document.querySelectorAll('.char').forEach(s=>s.classLis
 
 /* ===== Lưu trữ ===== */
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let settings=store.get('settings',{name:'Đạt',rate:1,voice:''});
+let settings=store.get('settings',{name:'Đạt',rate:1,voice:'',pitch:1,preset:'tunhien'});
+const PRESETS=[
+  {id:'tunhien',name:'🙂 Tự nhiên',note:'Bình thường, rõ ràng',rate:1,pitch:1},
+  {id:'diudang',name:'🌸 Dịu dàng',note:'Chậm, nhẹ nhàng',rate:.85,pitch:1.1},
+  {id:'vuitoi',name:'😄 Vui tươi',note:'Cao giọng, lanh lợi',rate:1.05,pitch:1.3},
+  {id:'tramam',name:'☕ Trầm ấm',note:'Giọng thấp, chậm rãi',rate:.9,pitch:.85},
+  {id:'chamro',name:'👵 Chậm rõ',note:'Cho bà nghe dễ nhất',rate:.75,pitch:1},
+  {id:'nhanh',name:'⚡ Nhanh gọn',note:'Đọc nhanh hơn',rate:1.2,pitch:1.05}];
 let photos=[],answers=[],qi=-1,stage='idle',pending='';
 const $=id=>document.getElementById(id);
 const nm=()=>settings.name||'Đạt';
@@ -329,7 +342,7 @@ function speak(text,onend){
   const v=pickVoice();let i=0;setTalking(true);
   const done=()=>{if(id!==speakId)return;setTalking(false);setTimeout(()=>{if(id===speakId)onend&&onend()},350)};
   const next=()=>{if(id!==speakId)return;if(i>=parts.length){done();return}
-    const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='vi-VN';u.rate=settings.rate||1;u.pitch=1;if(v)u.voice=v;
+    const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='vi-VN';u.rate=settings.rate||1;u.pitch=settings.pitch||1;if(v)u.voice=v;
     let fired=false;const go=()=>{if(!fired){fired=true;setTimeout(next,150)}};u.onend=go;u.onerror=go;
     // phòng khi trình duyệt không báo kết thúc
     setTimeout(go,Math.max(5000,parts[i-1].length*220/(u.rate||1)));
@@ -490,10 +503,15 @@ setInterval(()=>{const n=new Date(),t=String(n.getHours()).padStart(2,'0')+':'+S
 function closeAlarm(){$('alarm').style.display='none';stopAll()}
 
 /* ===== Cài đặt ===== */
-function fillSettings(){$('setName').value=settings.name||'';$('setRate').value=settings.rate||0.9;loadVoices();
+function fillSettings(){renderPresets();$('setName').value=settings.name||'';$('setRate').value=settings.rate||0.9;loadVoices();
   $('setVoice').innerHTML='<option value="">Tự chọn giọng nữ</option>'+voices.map(v=>`<option ${v.name===settings.voice?'selected':''}>${esc(v.name)}</option>`).join('')}
 ['setRate','setVoice'].forEach(id=>$(id).onchange=()=>{settings.rate=+$('setRate').value;settings.voice=$('setVoice').value});
-function saveSettings(){settings={name:$('setName').value.trim()||'Đạt',rate:+$('setRate').value,voice:$('setVoice').value};store.set('settings',settings);toast('Đã lưu');closeSheets()}
+function renderPresets(){$('presets').innerHTML='';PRESETS.forEach(p=>{const b=document.createElement('button');
+  b.className=settings.preset===p.id?'on':'';b.innerHTML=p.name+'<small>'+p.note+'</small>';
+  b.onclick=()=>{settings.preset=p.id;settings.rate=p.rate;settings.pitch=p.pitch;$('setRate').value=p.rate;renderPresets();
+    speak('Dạ bà nội ơi, con đọc giọng như vầy bà nghe có thích không?')};
+  $('presets').appendChild(b)})}
+function saveSettings(){settings={...settings,name:$('setName').value.trim()||'Đạt',rate:+$('setRate').value,voice:$('setVoice').value};store.set('settings',settings);toast('Đã lưu');closeSheets()}
 
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
