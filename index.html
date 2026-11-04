@@ -305,6 +305,8 @@ function cleanSpeech(t){const E='(?=[\\s,.;:!?]|$)';return String(t)
   .replace(/(\d\s*(?:kg|k|ký|kí)?)\s*[-–]\s*(\d)/gi,'$1 đến $2')
   .replace(new RegExp('(\\d)\\s*kg'+E,'gi'),'$1 ký').replace(new RegExp('(\\d)\\s*k'+E,'gi'),'$1 nghìn')
   .replace(/(\d)\s*%/g,'$1 phần trăm').replace(/:/g,',')
+  // tiếng Việt hỏi bằng từ (chưa, không, bà, nè...) nên bỏ dấu ? để giọng đọc không lên giọng làm sai dấu chữ cuối (bà → bá, nè → né)
+  .replace(/[?？]/g,'.').replace(/!/g,'.')
   .replace(/\s+/g,' ').trim()}
 let speakId=0;
 function speak(text,onend){
