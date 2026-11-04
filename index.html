@@ -447,15 +447,18 @@ async function uploadDrive(text){
   const r=await fetch(DRIVE_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({name,text,photos:ps})});
   const j=await r.json();if(!j.ok)throw new Error(j.error||'upload');return j.url}
 async function sendAll(){
-  const text=buildText();try{await navigator.clipboard.writeText(text)}catch(e){}
+  const text=buildText();
   let up=false;
   if(DRIVE_URL&&photos.length){
     bot('Dạ bà chờ con xíu, con đang gửi ảnh lên cho '+nm()+' nha.');
-    try{await uploadDrive(text);up=true;bot('Ảnh lên rồi bà ơi. Giờ bà chọn Zalo rồi chọn '+nm()+' để gửi chữ nha.')}
-    catch(e){bot('Mạng hơi yếu nên ảnh chưa lên được. Bà gửi ảnh qua Zalo luôn nha.')}
+    try{await uploadDrive(text);up=true}
+    catch(e){bot('Mạng hơi yếu nên chưa gửi được. Bà gửi qua Zalo giúp con nha.')}
   }
+  if(up){bot('Gửi xong rồi bà ơi, '+nm()+' nhận được rồi nè. Cảm ơn bà nha!',{say:true});
+    quick([['🏠 Về trang chủ',goHome,'ghost']]);return}
+  try{await navigator.clipboard.writeText(text)}catch(e){}
   const data={title:'Hàng mới của bà',text};
-  if(!up&&photos.length&&navigator.canShare&&navigator.canShare({files:photos}))data.files=photos;
+  if(photos.length&&navigator.canShare&&navigator.canShare({files:photos}))data.files=photos;
   let ok=false;
   if(navigator.share){try{await navigator.share(data);ok=true}catch(e){}}
   if(ok)bot('Gửi xong rồi bà ơi. Cảm ơn bà nha!');
