@@ -158,6 +158,13 @@ label{display:block;margin-top:12px}
 @keyframes barRun{0%{transform:translateX(0)}30%{transform:translateX(-7px)}55%{transform:translateX(-7px)}85%,100%{transform:translateX(0)}}
 @keyframes headJump{0%,20%{transform:translateY(0) scale(1,1)}32%{transform:translateY(1.5px) scale(1.05,.93)}50%{transform:translateY(-8px) scale(.97,1.04)}66%{transform:translateY(0) scale(1.03,.97)}78%{transform:translateY(-1.5px) scale(1,1)}90%,100%{transform:translateY(0) scale(1,1)}}
 @keyframes trail{0%{transform:translateX(3px);opacity:0}14%{opacity:.9}40%{transform:translateX(-4px);opacity:0}100%{transform:translateX(-4px);opacity:0}}
+
+/* Thêm vệt gạch chạy từ trái qua phải khi đang thu âm */
+#micIco .rr{position:absolute;top:86.5%;height:5%;width:11%;left:0;border-radius:9px;background:#fff;opacity:0;will-change:transform,opacity}
+.chatIcon.listening #micIco .rr{animation:runRight 1.3s linear infinite}
+.chatIcon.listening #micIco .r2{animation-delay:.43s;width:8%}
+.chatIcon.listening #micIco .r3{animation-delay:.86s;width:6%}
+@keyframes runRight{0%{transform:translateX(-4px);opacity:0}20%{opacity:.85}70%{opacity:.6}100%{transform:translateX(26px);opacity:0}}
 </style>
 </head>
 <body>
@@ -280,7 +287,7 @@ const ICON={
  wave:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>'};
 function caption(t){$('caption').textContent=t}
 function setMic(state){const b=$('micBtn');b.classList.toggle('listening',state==='listen');
-  if(!$('micIco').firstChild)$('micIco').innerHTML='<span class="ico"><img class="ih" src="icon-head.png" alt=""><img class="ib" src="icon-bar.png" alt=""><i class="tr t1"></i><i class="tr t2"></i><i class="tr t3"></i></span>';
+  if(!$('micIco').firstChild)$('micIco').innerHTML='<span class="ico"><img class="ih" src="icon-head.png" alt=""><img class="ib" src="icon-bar.png" alt=""><i class="tr t1"></i><i class="tr t2"></i><i class="tr t3"></i><i class="rr r1"></i><i class="rr r2"></i><i class="rr r3"></i></span>';
   $('micLbl').textContent=state==='listen'?'Con đang nghe…':(stage==='answer'||stage==='confirm')?'Bấm để nói':'Nói chuyện'}
 function chatPress(){
   if(rec){rec.stop();return}
