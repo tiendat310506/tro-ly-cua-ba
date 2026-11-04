@@ -141,8 +141,17 @@ label{display:block;margin-top:12px}
 @keyframes ring{0%{box-shadow:0 0 0 0 rgba(31,138,58,.55)}100%{box-shadow:0 0 0 18px rgba(31,138,58,0)}}
 
 /* Icon nhảy lên xuống khi đang nghe bà nói */
-.chatIcon.listening #micIco img{animation:hop .45s cubic-bezier(.3,0,.4,1) infinite alternate}
+
 @keyframes hop{0%{transform:translateY(3px) scale(1.06,.92)}100%{transform:translateY(-7px) scale(.96,1.05)}}
+
+#micBtn.chatIcon.listening{background:#111;animation:ring 1.2s infinite}
+/* Icon 2 phần: gạch chạy qua trái rồi đầu nhảy lên khi đang nghe */
+#micIco .ico{position:relative;display:block;width:38px;height:38px}
+#micIco .ico img{position:absolute;inset:0;width:100%;height:100%}
+.chatIcon.listening #micIco .ih{animation:headJump 1.1s ease-in-out infinite}
+.chatIcon.listening #micIco .ib{animation:barRun 1.1s ease-in-out infinite}
+@keyframes barRun{0%{transform:translateX(0)}25%{transform:translateX(-9px)}45%{transform:translateX(-9px)}70%,100%{transform:translateX(0)}}
+@keyframes headJump{0%,28%{transform:translateY(0) scale(1)}34%{transform:translateY(1px) scale(1.06,.92)}50%{transform:translateY(-9px) scale(.96,1.05)}66%{transform:translateY(0) scale(1.04,.96)}74%,100%{transform:translateY(0) scale(1)}}
 </style>
 </head>
 <body>
@@ -265,7 +274,7 @@ const ICON={
  wave:'<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/></svg>'};
 function caption(t){$('caption').textContent=t}
 function setMic(state){const b=$('micBtn');b.classList.toggle('listening',state==='listen');
-  $('micIco').innerHTML='<img src="icon-chat.png" alt="" width="32" height="32">';
+  if(!$('micIco').firstChild)$('micIco').innerHTML='<span class="ico"><img class="ih" src="icon-head.png" alt=""><img class="ib" src="icon-bar.png" alt=""></span>';
   $('micLbl').textContent=state==='listen'?'Con đang nghe…':(stage==='answer'||stage==='confirm')?'Bấm để nói':'Nói chuyện'}
 function chatPress(){
   if(rec){rec.stop();return}
