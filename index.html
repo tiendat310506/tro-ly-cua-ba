@@ -258,7 +258,7 @@ function setTalking(on){document.querySelectorAll('.char').forEach(s=>s.classLis
 
 /* ===== Lưu trữ ===== */
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let settings=store.get('settings',{name:'Đạt',rate:0.95,voice:''});
+let settings=store.get('settings',{name:'Đạt',rate:1,voice:''});
 let photos=[],answers=[],qi=-1,stage='idle',pending='';
 const $=id=>document.getElementById(id);
 const nm=()=>settings.name||'Đạt';
@@ -314,12 +314,14 @@ function speak(text,onend){
   const id=++speakId;speechSynthesis.cancel();
   // Chia câu ngắn để giọng đọc ngắt nghỉ tự nhiên, không bị Chrome cắt giữa chừng
   // mỗi câu đều có dấu kết thúc để giọng đọc hạ giọng đúng và không nuốt chữ cuối
-  const parts=cleanSpeech(text).split(/(?<=[.?!…])\s+/).filter(x=>x.trim()).map(x=>/[.?!…]$/.test(x)?x:x+'.');
+  // Đọc liền một hơi (ít chỗ ngắt) để chữ cuối không bị kéo dài; chỉ chia câu khi quá dài
+  const ct=cleanSpeech(text).replace(/\.\s+(?=\S)/g,', ').replace(/[.…]+$/,'');
+  const parts=ct.length<=220?[ct]:ct.split(/,\s+/).reduce((acc,x)=>{const l=acc[acc.length-1];if(l&&(l+', '+x).length<=200)acc[acc.length-1]=l+', '+x;else acc.push(x);return acc},[]);
   if(!parts.length){onend&&onend();return}
   const v=pickVoice();let i=0;setTalking(true);
   const done=()=>{if(id!==speakId)return;setTalking(false);setTimeout(()=>{if(id===speakId)onend&&onend()},350)};
   const next=()=>{if(id!==speakId)return;if(i>=parts.length){done();return}
-    const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='vi-VN';u.rate=settings.rate||0.95;u.pitch=1.05;if(v)u.voice=v;
+    const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='vi-VN';u.rate=settings.rate||1;u.pitch=1;if(v)u.voice=v;
     let fired=false;const go=()=>{if(!fired){fired=true;setTimeout(next,150)}};u.onend=go;u.onerror=go;
     // phòng khi trình duyệt không báo kết thúc
     setTimeout(go,Math.max(5000,parts[i-1].length*220/(u.rate||1)));
