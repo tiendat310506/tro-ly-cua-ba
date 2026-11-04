@@ -287,6 +287,7 @@ function chatPress(){
   if(rec){rec.stop();return}
   if(stage==='answer'||stage==='confirm'){stage='answer';listen();return}
   if(stage==='photo'){askPhoto();return}
+  if(stage==='menu'){listen();return}
   menu();
 }
 function menu(){stage='menu';bot('Bà nội ơi, hôm nay bà cần con phụ gì nè?');
@@ -365,13 +366,15 @@ function listen(){
     caption('Bà: '+(finalTxt+' '+interim).trim());
     arm(interim?2200:1500)}; // bà ngừng nói khoảng 1,5 giây thì con chốt câu
   r.onerror=e=>{err=e.error;if(err==='not-allowed'||err==='service-not-allowed')toast('Bà cho phép dùng micro giúp con nha');
-    else if(err==='network')toast('Mạng yếu nên con nghe chưa được, bà thử lại nha');};
+    else if(err==='network')toast('Trình duyệt này chưa nghe được giọng nói. Bà mở bằng Google Chrome giúp con nha');
+    else if(err==='audio-capture')toast('Con không tìm thấy micro, bà kiểm tra micro giúp con nha');
+    else if(err&&err!=='no-speech'&&err!=='aborted')toast('Con chưa nghe được ('+err+'), bà thử lại nha');};
   r.onend=()=>{clearTimeout(silence);if(rec===r)rec=null;setMic('idle');
     const text=(finalTxt||interim).trim();
     if(text){retry=0;handleInput(fixText(text));return}
     if(r._abort||err==='not-allowed'||err==='service-not-allowed')return;
     // Android đôi khi tự tắt micro sớm: mở lại ngay nếu bà chưa kịp nói
-    if(!gotSpeech&&Date.now()-t0<8000&&err!=='network'&&err!=='no-speech'){listen();return}
+    if(!gotSpeech&&!err&&Date.now()-t0<8000){listen();return}
     if((stage==='answer'||stage==='confirm')&&retry<2){retry++;
       bot('Con chưa nghe rõ, bà nói lớn và chậm lại giúp con nha.',{after:()=>listen()});return}
     retry=0;caption('Bà bấm nút tròn rồi nói nha.')};
@@ -417,7 +420,8 @@ function handleInput(text){
     else{pending=text;bot('Vậy là: '+text+'. Đúng chưa bà?',{after:()=>{if(stage==='confirm'&&SR)listen()}});
       quick([['✅ Đúng rồi',()=>{answers[qi]=pending;nextQuestion()},'lime'],['🎤 Nói lại',()=>{stage='answer';listen()},'ghost']])}
   }else if(stage==='photo'){bot('Bà gửi ảnh trước giúp con nha.');askPhoto()}
-  else bot('Dạ con nghe rồi bà.',{say:true});
+  else if(/đăng|bán|bài|hàng|sản phẩm|ảnh|hình/i.test(text))startPost();
+  else bot('Dạ con nghe rồi bà. Bà muốn đăng bài bán hàng thì nói "đăng bài" hoặc bấm nút giúp con nha.');
 }
 
 function buildText(){
