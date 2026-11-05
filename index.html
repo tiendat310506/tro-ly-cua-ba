@@ -335,7 +335,7 @@ function cleanSpeech(t){const E='(?=[\\s,.;:!?]|$)';return String(t)
 let speakId=0;
 function speak(text,onend){
   if(!('speechSynthesis' in window)){onend&&onend();return}
-  stopRec(true);const id=++speakId;speechSynthesis.cancel();
+  const hadRec=!!rec;stopRec(true);const id=++speakId;try{speechSynthesis.cancel();speechSynthesis.resume()}catch(e){}
   // Chia câu ngắn để giọng đọc ngắt nghỉ tự nhiên, không bị Chrome cắt giữa chừng
   // mỗi câu đều có dấu kết thúc để giọng đọc hạ giọng đúng và không nuốt chữ cuối
   // Đọc liền một hơi (ít chỗ ngắt) để chữ cuối không bị kéo dài; chỉ chia câu khi quá dài
@@ -346,11 +346,19 @@ function speak(text,onend){
   const done=()=>{if(id!==speakId)return;setTalking(false);setTimeout(()=>{if(id===speakId)onend&&onend()},350)};
   const next=()=>{if(id!==speakId)return;if(i>=parts.length){done();return}
     const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='vi-VN';u.rate=settings.rate||1;u.pitch=settings.pitch||1;if(v)u.voice=v;
-    let fired=false;const go=()=>{if(!fired){fired=true;setTimeout(next,150)}};u.onend=go;u.onerror=go;
+    let fired=false,started=false;const go=()=>{if(!fired){fired=true;setTimeout(next,150)}};
+    u.onstart=()=>{started=true};u.onend=go;
+    u.onerror=e=>{if(e&&e.error==='not-allowed')toast('Bà chạm vào màn hình một cái để con nói nha');go()};
+    window.__utt=u; // giữ lại để Chrome không làm mất câu đang đọc
     // phòng khi trình duyệt không báo kết thúc
     setTimeout(go,Math.max(5000,parts[i-1].length*220/(u.rate||1)));
-    speechSynthesis.speak(u)};
-  setTimeout(next,60);
+    try{speechSynthesis.resume()}catch(e){}
+    speechSynthesis.speak(u);
+    // Chrome đôi khi "nuốt" câu (không đọc gì): sau 1,5 giây chưa thấy đọc thì đọc lại 1 lần
+    setTimeout(()=>{if(id!==speakId||started||fired||speechSynthesis.speaking)return;
+      try{speechSynthesis.cancel()}catch(e){};setTimeout(()=>{if(id===speakId&&!fired){try{speechSynthesis.resume()}catch(e){};speechSynthesis.speak(u)}},80)},1500)};
+  // vừa tắt micro thì chờ chút cho máy trả loa lại rồi mới đọc
+  setTimeout(next,hadRec?400:80);
 }
 
 /* ===== Tin nhắn ===== */
