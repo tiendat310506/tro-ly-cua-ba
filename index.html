@@ -299,7 +299,7 @@ function setMic(state){const b=$('micBtn');b.classList.toggle('listening',state=
   if(!$('micIco').firstChild)$('micIco').innerHTML='<span class="ico"><img class="ih" src="icon-head.png" alt=""><img class="ib" src="icon-bar.png" alt=""><span class="track"><span class="belt"><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>';
   $('micLbl').textContent=state==='listen'?'Con đang nghe…':(stage==='answer'||stage==='confirm')?'Bấm để nói':'Nói chuyện'}
 function chatPress(){
-  if(rec){rec.stop();return}
+  if(rec){const r=rec;try{r.stop()}catch(e){};return} // bấm lúc đang nghe = chốt câu đang nói
   if(stage==='answer'||stage==='confirm'){stage='answer';listen();return}
   if(stage==='photo'){askPhoto();return}
   if(stage==='menu'){listen();return}
@@ -335,7 +335,7 @@ function cleanSpeech(t){const E='(?=[\\s,.;:!?]|$)';return String(t)
 let speakId=0;
 function speak(text,onend){
   if(!('speechSynthesis' in window)){onend&&onend();return}
-  const id=++speakId;speechSynthesis.cancel();
+  stopRec(true);const id=++speakId;speechSynthesis.cancel();
   // Chia câu ngắn để giọng đọc ngắt nghỉ tự nhiên, không bị Chrome cắt giữa chừng
   // mỗi câu đều có dấu kết thúc để giọng đọc hạ giọng đúng và không nuốt chữ cuối
   // Đọc liền một hơi (ít chỗ ngắt) để chữ cuối không bị kéo dài; chỉ chia câu khi quá dài
@@ -368,41 +368,64 @@ function clearQuick(){$('actions').innerHTML=''}
 
 /* ===== Nhận giọng nói ===== */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,retry=0;
-function listen(){
+// Android Chrome xử lý chế độ nghe liên tục rất kém (lặp chữ, tự tắt) → mỗi lần chỉ nghe 1 câu
+const IS_ANDROID=/Android/i.test(navigator.userAgent);
+const norm=t=>t.toLowerCase().replace(/[.,!?]/g,'').replace(/\s+/g,' ').trim();
+// Ghép các đoạn nhận được, bỏ phần bị lặp (Android hay trả lại cả câu cũ + chữ mới)
+function mergeText(parts){let acc='';
+  for(let t of parts){t=(t||'').trim();if(!t)continue;
+    const a=norm(acc),b=norm(t);
+    if(!a||b.startsWith(a))acc=t;else if(a.endsWith(b)||a.includes(b))continue;else acc+=' '+t}
+  return acc.trim()}
+// Tắt micro: quiet=true thì bỏ luôn những gì đang nghe dở
+let listenTimer=null;
+function stopRec(quiet){clearTimeout(listenTimer);const r=rec;if(!r)return;rec=null;r._abort=!!quiet;
+  try{quiet?r.abort():r.stop()}catch(e){};setMic('idle')}
+function listen(_try=0){
   if(!SR){toast('Máy chưa hỗ trợ nói, bà gõ chữ giúp con nha');openSheet('history');$('txt').focus();return}
-  if(rec){rec.stop();return}
-  speakId++;speechSynthesis.cancel();setTalking(false);
-  const r=new SR();rec=r;r.lang='vi-VN';r.interimResults=true;r.continuous=true;r.maxAlternatives=3;
-  let finalTxt='',interim='',silence=null,gotSpeech=false,userStop=false,err='';const t0=Date.now();
-  const arm=ms=>{clearTimeout(silence);silence=setTimeout(()=>{try{r.stop()}catch(e){}},ms)};
-  arm(9000); // chờ bà bắt đầu nói tối đa 9 giây
-  r.onresult=e=>{interim='';gotSpeech=true;
-    for(let k=e.resultIndex;k<e.results.length;k++){const res=e.results[k];
-      if(res.isFinal)finalTxt+=(finalTxt?' ':'')+res[0].transcript.trim();else interim+=res[0].transcript}
-    caption('Bà: '+(finalTxt+' '+interim).trim());
-    arm(interim?2200:1500)}; // bà ngừng nói khoảng 1,5 giây thì con chốt câu
-  r.onerror=e=>{err=e.error;if(err==='not-allowed'||err==='service-not-allowed')toast('Bà cho phép dùng micro giúp con nha');
-    else if(err==='network')toast('Trình duyệt này chưa nghe được giọng nói. Bà mở bằng Google Chrome giúp con nha');
+  const had=!!rec;stopRec(true); // luôn mở micro mới, không bật/tắt lẫn lộn
+  // vừa tắt micro cũ thì chờ chút cho nó tắt hẳn rồi mới mở micro mới
+  if(had&&!_try){setMic('listen');listenTimer=setTimeout(()=>listen(1),350);return}
+  speakId++;try{speechSynthesis.cancel()}catch(e){};setTalking(false);
+  const r=new SR();rec=r;r.lang='vi-VN';r.interimResults=true;r.continuous=!IS_ANDROID;r.maxAlternatives=1;
+  let finals=[],interim='',silence=null,gotSpeech=false,err='';const t0=Date.now(),stage0=stage;
+  const text=()=>mergeText([...finals,interim]);
+  const arm=ms=>{clearTimeout(silence);silence=setTimeout(()=>{if(rec===r)try{r.stop()}catch(e){}},ms)};
+  arm(10000); // chờ bà bắt đầu nói tối đa 10 giây
+  r.onresult=e=>{if(r._abort)return;gotSpeech=true;finals=[];interim='';
+    // đọc lại toàn bộ kết quả mỗi lần, không cộng dồn theo resultIndex (tránh lặp chữ)
+    for(let k=0;k<e.results.length;k++){const res=e.results[k],t=(res[0]&&res[0].transcript)||'';
+      if(res.isFinal)finals.push(t);else interim+=' '+t}
+    interim=interim.trim();caption('Bà: '+text());
+    arm(interim?2500:1600)}; // bà ngừng nói khoảng 1,6 giây thì con chốt câu
+  r.onerror=e=>{err=e.error;if(r._abort)return;
+    if(err==='not-allowed'||err==='service-not-allowed')toast('Bà cho phép dùng micro giúp con nha');
+    else if(err==='network')toast('Mạng yếu hoặc trình duyệt chưa nghe được. Bà mở bằng Google Chrome giúp con nha');
     else if(err==='audio-capture')toast('Con không tìm thấy micro, bà kiểm tra micro giúp con nha');
-    else if(err&&err!=='no-speech'&&err!=='aborted')toast('Con chưa nghe được ('+err+'), bà thử lại nha');};
-  r.onend=()=>{clearTimeout(silence);if(rec===r)rec=null;setMic('idle');
-    const text=(finalTxt||interim).trim();
-    if(text){retry=0;handleInput(fixText(text));return}
-    if(r._abort||err==='not-allowed'||err==='service-not-allowed')return;
-    // Android đôi khi tự tắt micro sớm: mở lại ngay nếu bà chưa kịp nói
-    if(!gotSpeech&&!err&&Date.now()-t0<8000){listen();return}
+    else if(err&&err!=='no-speech'&&err!=='aborted')toast('Con chưa nghe được ('+err+'), bà thử lại nha')};
+  r.onend=()=>{clearTimeout(silence);if(r._abort)return;if(rec===r){rec=null;setMic('idle')}
+    const t=text();
+    if(t){retry=0;handleInput(fixText(t));return}
+    if(err==='not-allowed'||err==='service-not-allowed'||err==='audio-capture')return;
+    if(stage!==stage0)return; // đã sang bước khác
+    // máy tự tắt micro sớm khi bà chưa kịp nói: mở lại (chờ chút cho micro cũ tắt hẳn)
+    if(!gotSpeech&&(!err||err==='aborted')&&Date.now()-t0<8000){setTimeout(()=>{if(!rec&&stage===stage0)listen()},300);return}
+    if(err==='network'){caption('Bà bấm nút tròn rồi nói nha.');return}
     if((stage==='answer'||stage==='confirm')&&retry<2){retry++;
-      bot('Con chưa nghe rõ, bà nói lớn và chậm lại giúp con nha.',{after:()=>listen()});return}
+      bot('Con chưa nghe rõ, bà nói lớn và chậm lại giúp con nha.',{after:()=>{if(stage===stage0)listen()}});return}
     retry=0;caption('Bà bấm nút tròn rồi nói nha.')};
-  setMic('listen');try{r.start()}catch(e){rec=null;setMic('idle')}
+  setMic('listen');
+  try{r.start()}catch(e){ // micro cũ chưa tắt hẳn → thử lại sau chút xíu
+    if(rec===r){rec=null;setMic('idle')}
+    if(_try<3)setTimeout(()=>{if(!rec)listen(_try+1)},400)}
 }
 // Sửa vài lỗi nhận giọng hay gặp
 function fixText(t){t=t.replace(/\s+/g,' ').trim();
   const E='(?=[\\s,.;]|$)';t=t.replace(new RegExp('(\\d+)\\s*(ký|kí|kg|cân|ki lô)'+E,'gi'),'$1kg').replace(new RegExp('(\\d+)\\s*(nghìn|ngàn|k|ca)'+E,'gi'),'$1k');
   return t.charAt(0).toUpperCase()+t.slice(1)}
-function sendTyped(){try{if(rec){rec._abort=true;rec.abort()}}catch(e){};const t=$('txt').value.trim();if(!t)return;$('txt').value='';handleInput(t)}
+function sendTyped(){stopRec(true);const t=$('txt').value.trim();if(!t)return;$('txt').value='';handleInput(t)}
 $('txt').addEventListener('keydown',e=>{if(e.key==='Enter')sendTyped()});
-function stopAll(){try{rec&&rec.stop()}catch(e){};if('speechSynthesis' in window)speechSynthesis.cancel();setTalking(false)}
+function stopAll(){stopRec(true);if('speechSynthesis' in window)speechSynthesis.cancel();setTalking(false)}
 
 /* ===== Luồng trò chuyện ===== */
 function startPost(){
