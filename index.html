@@ -6,7 +6,8 @@
 <title>Trợ Lý Của Bà</title>
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
@@ -192,6 +193,7 @@ label{display:block;margin-top:12px}
 <!-- Cài đặt (gồm nhắc nhở) -->
 <div class="sheet" id="settings"><div class="sheetIn">
   <div class="sheetHead"><b>⚙️ Cài đặt</b><button class="ghost close" onclick="closeSheets()">✕ Đóng</button></div>
+  <button id="installBtn" class="lime small" style="display:none;width:100%;margin-bottom:12px" onclick="installApp()">📲 Cài app vào điện thoại</button>
   <h2>⏰ Nhắc nhở hằng ngày</h2>
   <div id="remList"></div>
   <div class="card">
@@ -645,6 +647,12 @@ function renderPresets(){document.querySelectorAll('#genders button').forEach(b=
 function saveSettings(){settings={...settings,name:$('setName').value.trim()||'Đạt',rate:+$('setRate').value,voice:$('setVoice').value};store.set('settings',settings);toast('Đã lưu');closeSheets()}
 
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+// Nút "Cài app" khi Chrome cho phép cài
+let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('installBtn').style.display='block'});
+async function installApp(){if(!installEvt){toast('Bấm ⋮ trên Chrome rồi chọn "Thêm vào Màn hình chính" nha');return}
+  installEvt.prompt();const r=await installEvt.userChoice;installEvt=null;$('installBtn').style.display='none';
+  if(r.outcome==='accepted')toast('Đã cài xong, app nằm ngoài màn hình chính nha')}
+addEventListener('appinstalled',()=>{$('installBtn').style.display='none'});
 </script>
 </body>
 </html>
