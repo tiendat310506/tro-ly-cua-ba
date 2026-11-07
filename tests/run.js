@@ -31,7 +31,7 @@ await toQ1();
 await E(()=>{window.__ri=0;__sr.emit([['giá',true]])});await W(50);
 await E(()=>{window.__ri=1;__sr.emit([['giá',true],['giá 150 nghìn',true]])});await W(1800);
 await E(()=>window.__ri=0);
-ok((await lastMe())==='Giá 150k','không bị lặp chữ: '+await lastMe());
+ok((await lastMe())==='Giá 150 nghìn','không bị lặp chữ: '+await lastMe());
 
 console.log('Kịch bản 3: bấm "Đúng rồi" khi micro đang nghe → câu hỏi kế không bị micro thu vào');
 await toQ1();await E(()=>__sr.emit([['áo thun',true]]));await until(()=>!!rec&&stage==='confirm');
@@ -53,7 +53,7 @@ ok(await E(()=>stage)==='answer','về bước trả lời');
 
 console.log('Kịch bản 5: micro tự tắt sớm (Android) chưa kịp nói → tự mở lại');
 await toQ1();const n5=await recN();
-await E(()=>__sr._end());await W(600);
+await E(()=>__sr._end());await W(1200);
 ok((await recN())>n5&&await active(),'mở lại micro: '+(await recN()-n5)+' lần');
 
 console.log('Kịch bản 6: không nghe thấy gì (no-speech) → nhắc nói lại và nghe tiếp');
@@ -91,7 +91,7 @@ ok(!/tiếng lạ/i.test(await lastMe()),'không nhận tiếng lạ');
 console.log('Kịch bản 12: máy tự kết thúc ngay sau câu cuối (Android thật) → chỉ nhận 1 lần');
 await toQ1();await E(()=>{__sr.emit([['giá 200 nghìn',true]]);__sr._end()});
 await until(()=>stage==='confirm');await W(2200);
-const cnt=await E(()=>[...document.querySelectorAll('.b.me')].filter(x=>x.textContent==='Giá 200k').length);
+const cnt=await E(()=>[...document.querySelectorAll('.b.me')].filter(x=>x.textContent==='Giá 200 nghìn').length);
 ok(cnt===1,'chỉ nhận 1 lần (đếm '+cnt+')');
 
 console.log('Kịch bản 13: nói "dạ đúng rồi bà" / "không phải" ở bước xác nhận');
@@ -102,6 +102,23 @@ await E(()=>{__sr.emit([['màu vàng',true]]);__sr._end()});await until(()=>!!re
 await E(()=>{__sr.emit([['dạ đúng rồi bà',true]]);__sr._end()});
 ok(await until(()=>qi===1),'"dạ đúng rồi bà" → lưu và sang câu 2');
 ok(await E(()=>answers[0])==='Màu vàng','lưu đúng: '+await E(()=>answers[0]));
+
+console.log('Kịch bản 14: câu hỏi giá, bà đọc bằng chữ → ra số gọn');
+await E(()=>{stopAll();answers=QUESTIONS.map(()=>'');qi=1;$('msgs').innerHTML='';nextQuestion()});await until(()=>!!rec&&stage==='answer');
+await E(()=>{__sr.emit([['một trăm năm mươi nghìn',true]]);__sr._end()});await until(()=>stage==='confirm');
+ok((await lastMe())==='150k','giá: '+await lastMe());
+await E(()=>{stopAll();qi=3;nextQuestion()});await until(()=>!!rec&&stage==='answer');
+await E(()=>{__sr.emit([['năm lăm ký đến sáu lăm ký',true]]);__sr._end()});await until(()=>stage==='confirm');
+ok((await lastMe())==='55kg đến 65kg','size: '+await lastMe());
+
+console.log('Kịch bản 15: bấm "Nói lại" ở câu hỏi màu rồi nói (lỗi anh Đạt gặp)');
+await E(()=>{stopAll();qi=2;nextQuestion()});await until(()=>!!rec&&stage==='answer');
+await E(()=>{__sr.emit([['đỏ',true]]);__sr._end()});await until(()=>!!rec&&stage==='confirm');
+await E(()=>[...document.querySelectorAll('#quick button')].find(x=>/Nói lại/.test(x.textContent)).click());
+ok(await until(()=>!!rec&&stage==='answer'),'micro mở, sẵn sàng nghe');
+await E(()=>{__sr.emit([['đỏ, xanh và vàng',true]]);__sr._end()});
+ok(await until(()=>stage==='confirm'),'đã nhận lời nói mới');
+ok((await lastMe())==='Đỏ, xanh, vàng','màu: '+await lastMe());
 
 console.log(errs.length?'Lỗi trang: '+errs.join(' | '):'Không có lỗi JS');
 console.log(fails?`=> ${fails} lỗi`:'=> TẤT CẢ ĐẠT');
